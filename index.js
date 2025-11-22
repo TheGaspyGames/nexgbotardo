@@ -12,14 +12,53 @@ const THROTTLED_RECONNECT_DELAY_MS = 10 * 60 * 1000; // 10 minutos si el server 
 
 console.log("[BOT] Script iniciado.");
 
+let inputInitialized = false;
+let currentBot = null;
+let botPassword = null;
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
+function setupChatInput() {
+  if (inputInitialized) return;
+  inputInitialized = true;
+
+  rl.setPrompt("Escribe un mensaje para enviar al chat: ");
+  rl.on('line', (line) => {
+    const text = line.trim();
+
+    if (!text) {
+      rl.prompt();
+      return;
+    }
+
+    if (!currentBot) {
+      console.log("[BOT] Aún no hay una conexión activa, no se envió el mensaje.");
+      rl.prompt();
+      return;
+    }
+
+    try {
+      currentBot.chat(text);
+      console.log(`[BOT] Mensaje enviado: ${text}`);
+    } catch (err) {
+      console.log("[BOT] No se pudo enviar el mensaje desde la terminal:");
+      console.error(err);
+    }
+
+    rl.prompt();
+  });
+
+  rl.prompt();
+}
+
 rl.question("Ingresa la contraseña del bot (para /login y /register): ", (password) => {
+  botPassword = password;
   console.log("[BOT] Contraseña recibida. Creando bot...");
   startBot(password);
+  setupChatInput();
 });
 
 let reconnectTimeout = null;
@@ -57,6 +96,8 @@ function startBot(password) {
     // auth: "microsoft",
     // username: "tu_correo_de_minecraft@example.com"
   });
+
+  currentBot = bot;
 
   let antiAfkInterval = null;
   let hasScheduledReconnect = false;
