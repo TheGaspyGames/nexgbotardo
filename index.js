@@ -133,14 +133,27 @@ function startBot(password) {
   bot.on('spawn', () => {
     console.log("[BOT] Spawn completado. Esperando mensajes de /login o /register...");
 
-    // ANTI-AFK: mover un poco la cámara cada 30 segundos
+    // ANTI-AFK: realizar un pequeño movimiento cada 30 segundos
     if (antiAfkInterval) clearInterval(antiAfkInterval);
-    antiAfkInterval = setInterval(() => {
+
+    const movementSequence = ['forward', 'back', 'left', 'right'];
+    let movementIndex = 0;
+
+    function performMovementStep() {
       if (!bot.entity) return;
-      const newYaw = bot.entity.yaw + 0.2;
-      bot.look(newYaw, 0, false);
-      console.log("[BOT] Moviendo cámara para evitar AFK.");
-    }, 30000);
+
+      const direction = movementSequence[movementIndex];
+      movementIndex = (movementIndex + 1) % movementSequence.length;
+
+      bot.setControlState(direction, true);
+      console.log(`[BOT] Movimiento anti-AFK: ${direction}`);
+
+      setTimeout(() => {
+        bot.setControlState(direction, false);
+      }, 1000);
+    }
+
+    antiAfkInterval = setInterval(performMovementStep, 30000);
   });
 
   // Mensajes del servidor (para detectar /register y /login)
