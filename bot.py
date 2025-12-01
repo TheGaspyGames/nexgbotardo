@@ -16,11 +16,24 @@ Run with:
 """
 from __future__ import annotations
 
+import importlib.util
 import json
+import sys
 import threading
 import time
 from queue import Queue, Empty
 from typing import Optional
+
+
+def _ensure_pycraft_installed() -> None:
+    if importlib.util.find_spec("minecraft") is None:
+        sys.exit(
+            "pyCraft no está instalado. Ejecuta `pip install pyCraft` "
+            "o `pip install -r requirements.txt` antes de usar el bot."
+        )
+
+
+_ensure_pycraft_installed()
 
 from minecraft.networking.connection import Connection
 from minecraft.networking.packets.clientbound.play import (
